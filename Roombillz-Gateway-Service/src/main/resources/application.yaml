@@ -1,17 +1,138 @@
 server:
   port: 8080
-  servlet:
-    context-path: /api/v1/gateway
 
 spring:
   application:
     name: ROOMBILLZ-GATEWAY-SERVICE
-    
+
   profiles:
     active: local
-    
+
+  cloud:
+    gateway:
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+        - RemoveRequestHeader=Cookie
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
+      routes:
+
+        # ==============================
+        # ROOMBILLZ SERVICE
+        # ==============================
+        - id: roombillz-service
+          uri: lb://ROOMBILLZ-SERVICE
+          predicates:
+            - Path=/api/v1/gateway/api/v1/roomBillz/**
+          filters:
+            - StripPrefix=3
+
+        # ==============================
+        # NOTIFICATION SERVICE
+        # ==============================
+        - id: notification-service
+          uri: lb://ROOMBILLZ-NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/gateway/api/v1/notification/**
+          filters:
+            - StripPrefix=3
+
+        # ==============================
+        # DOCUMENT SERVICE
+        # ==============================
+        - id: document-service
+          uri: lb://ROOMBILLZ-DOCUMENT-SERVICE
+          predicates:
+            - Path=/api/v1/gateway/api/v1/document/**
+          filters:
+            - StripPrefix=3
+
+        # ==============================
+        # SCHEDULER SERVICE
+        # ==============================
+        - id: scheduler-service
+          uri: lb://ROOMBILLZ-SCHEDULER-SERVICE
+          predicates:
+            - Path=/api/v1/gateway/api/v1/scheduler/**
+          filters:
+            - StripPrefix=3
+
+
 # ==============================
-# ACTUATOR CONFIG
+# EUREKA CLIENT CONFIGURATION
+# ==============================
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
+
+  instance:
+    prefer-ip-address: true
+
+
+# ==============================
+# JWT CONFIGURATION
+# ==============================
+jwt:
+  secret: roombillz-secret-key-very-secure-123456
+  expiration: 3600000
+  refreshExpiration: 86400000
+
+
+# ==============================
+# SERVICE URLS (LOCAL / DOCKER)
+# ==============================
+roombillz:
+  service:
+    url: http://${ROOMBILLZ_HOST:localhost}:8081/api/v1/roomBillz
+
+notification:
+  service:
+    url: http://${NOTIFICATION_HOST:localhost}:8082/api/v1/notification
+
+scheduler:
+  service:
+    url: http://${SCHEDULER_HOST:localhost}:8083/api/v1/scheduler
+
+document:
+  service:
+    url: http://${DOCUMENT_HOST:localhost}:8084/api/v1/document
+
+
+# ==============================
+# SWAGGER AGGREGATION
+# ==============================
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: roombillz-service
+        url: /api/v1/roomBillz/v3/api-docs
+      - name: notification-service
+        url: /api/v1/notification/v3/api-docs
+      - name: document-service
+        url: /api/v1/document/v3/api-docs
+      - name: scheduler-service
+        url: /api/v1/scheduler/v3/api-docs
+
+
+# ==============================
+# ACTUATOR CONFIGURATION
 # ==============================
 management:
   health:
@@ -34,4 +155,13 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-    
+
+
+# ==============================
+# LOGGING
+# ==============================
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: INFO
+    reactor.netty: INFO
