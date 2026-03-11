@@ -124,13 +124,13 @@ springdoc:
     path: /swagger-ui.html
     urls:
       - name: roombillz-service
-        url: /api/roombillz/v3/api-docs
+        url: /api/v1/gateway/api/v1/roomBillz/v3/api-docs
       - name: notification-service
-        url: /api/notification/v3/api-docs
+        url: /api/v1/gateway/api/v1/notification/v3/api-docs
       - name: document-service
-        url: /api/document/v3/api-docs
+        url: /api/v1/gateway/api/v1/document/v3/api-docs
       - name: scheduler-service
-        url: /api/schedule/v3/api-docs
+        url: /api/v1/gateway/api/v1/scheduler/v3/api-docs
 
 
 # ==============================
